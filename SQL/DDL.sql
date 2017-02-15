@@ -5,7 +5,7 @@ USE Auktion;
 DROP PROCEDURE IF EXISTS RegistreraProdukt;
 DELIMITER //
 
-CREATE PROCEDURE RegistreraProdukt(IN Namn VARCHAR(100), IN Provision FLOAT, IN UtgångsPris INT, IN AcceptPris INT, IN Beskrivning VARCHAR(200))
+CREATE PROCEDURE RegistreraProdukt(IN Namn VARCHAR(100), IN Provision FLOAT, IN Beskrivning VARCHAR(200))
 
 BEGIN
 	DECLARE ProduktFinnsRedan BOOL DEFAULT FALSE;
@@ -17,15 +17,13 @@ BEGIN
 	END;
     
     START TRANSACTION;
-		INSERT INTO Produkt(Namn,Provision,UtgångsPris,AcceptPris,Beskrivning)
-			VALUES (Namn, Provision, UtgångsPris, AcceptPris, Beskrivning);
+		INSERT INTO Produkt(Namn,Provision,Beskrivning)
+			VALUES (Namn, Provision, Beskrivning);
         
         IF ProduktFinnsRedan THEN
         UPDATE Produkt
 			SET Produkt.Namn = Namn,
 				Produkt.Provision = Provision,
-                Produkt.UtgångsPris = UtgångsPris,
-                Produkt.AcceptPris = AcceptPris,
                 Produkt.Beskrivning = Beskrivning;
 		END IF;
         COMMIT;
@@ -34,7 +32,7 @@ END //
 
 DELIMITER ;
 
-CALL RegistreraProdukt( 'Bokhylla', 0.10, 8500, 11900, 'En välvårdat bokhylla tillverkad');
+CALL RegistreraProdukt( 'Bokhylla', 0.10,  'En välvårdat bokhylla tillverkad');
 SELECT * FROM Produkt;
 
 -- Skapa en aukton utifrån en viss produkt där man kan sä5a utgångspris, acceptpris samt start och slutdatum för auk-onen. 
@@ -42,7 +40,7 @@ SELECT * FROM Produkt;
 DROP PROCEDURE IF EXISTS SkapaAuktion;
 DELIMITER //
 
-CREATE PROCEDURE SkapaAuktion(IN UtGångsPris INT, IN AcceptPris INT, IN StartDatum DATE, IN SlutDatum DATE, IN Produktnummer INT, IN AuktionID INT)
+CREATE PROCEDURE SkapaAuktion(IN UtGångsPris INT, IN AcceptPris INT, IN StartDatum DATE, IN SlutDatum DATE, IN Produktnummer INT)
 
 BEGIN
 	
@@ -53,22 +51,24 @@ BEGIN
         
 	START TRANSACTION;
     
-		UPDATE Produkt
-			SET Produkt.UtGångsPris = UtGångsPris,
-				Produkt.AcceptPris = AcceptPris
-					WHERE Produkt.Produktnummer = Produktnummer;
+
+        INSERT INTO `auktion` ( `StartDatum`, `SlutDatum`, `UtgångsPris`, `AcceptPris`)
+        VALUES ( '2017-02-01', '2017-02-23', '4000', '9000');
+        INSERT INTO `auktionsprodukt`
+        VALUES (LAST_INSERT_ID(), Produktnummer);
         
-        UPDATE Auktion
-			SET Auktion.StartDatum = StartDatum,
-				Auktion.SlutDatum = SlutDatum
-					WHERE Auktion.AuktionId = AuktionID;
+        
+        -- UPDATE Auktion
+		-- 	SET Auktion.StartDatum = StartDatum,
+			-- 	Auktion.SlutDatum = SlutDatum
+				-- 	WHERE Auktion.AuktionId = AuktionID;
          
 	COMMIT;				
 END //
 
 DELIMITER ;
 
-CALL SkapaAuktion(13500, 22000, '2016-04-08', '2016-04-11', 9 ,9);
+CALL SkapaAuktion(13500, 22000, '2016-04-08', '2016-04-11' ,9);
 SELECT * FROM Produkt;
 SELECT * FROM Auktion;
 SELECT * FROM AuktionsProdukt;
@@ -114,16 +114,17 @@ DELIMITER ;
 CALL GetAvslutadeAuktioner('2016-01-03','2016-04-10');
 
 -- 6.
+DROP EVENT IF EXISTS ArkiveraAuktionerUtanKöpare;
 SHOW EVENTS;
 SET GLOBAL event_scheduler = ON;
-
 DELIMITER //
+
 CREATE EVENT ArkiveraAuktionerUtanKöpare
 ON SCHEDULE EVERY 10 SECOND
 ON COMPLETION PRESERVE
 DO
 BEGIN
-	INSERT INTO AuktionerUtanKöpare(SELECT Auktion.AuktionId, Produkt.Produktnummer, Produkt.AcceptPris,
+	INSERT INTO AuktionerUtanKöpare(SELECT Auktion.AuktionId, Produkt.Produktnummer, auktion.AcceptPris,
 		MAX(bud.Budsumma) as SistaBud, Auktion.SlutDatum FROM Bud
 		INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
 		INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
@@ -139,10 +140,11 @@ SELECT * FROM Auktion;
 
 
 -- 7.
+DROP EVENT IF EXISTS Auktion;
 SHOW EVENTS;
 SET GLOBAL event_scheduler = ON;
 DELIMITER //
-CREATE EVENT ArkiveraAuktion 
+CREATE EVENT Auktion
 ON SCHEDULE EVERY 10 SECOND
 ON COMPLETION PRESERVE
 DO
@@ -152,7 +154,7 @@ BEGIN
         INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
         INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
         INNER JOIN Produkt ON auktionsprodukt.Produktnummer = Produkt.Produktnummer
-        WHERE Bud.Budsumma >= Produkt.AcceptPris AND Auktion.SlutDatum < current_date()
+        WHERE Auktion.SlutDatum < current_date()
         GROUP BY auktionsprodukt.Produktnummer);
     DELETE FROM auktion WHERE auktion.AuktionId IN (SELECT auktionshistorik.AuktionsHistorikID FROM auktionshistorik);
 END //
