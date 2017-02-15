@@ -1,189 +1,172 @@
+DROP DATABASE IF EXISTS Auktion;
+CREATE DATABASE Auktion;
 USE Auktion;
 
--- 1. 
--- Registrera en produkt 
-DROP PROCEDURE IF EXISTS RegistreraProdukt;
-DELIMITER //
+CREATE TABLE Leverantör(
+LeverantörId INT AUTO_INCREMENT PRIMARY KEY,
+Namn VARCHAR(100) NOT NULL,
+Epost VARCHAR(100) NOT NULL,
+Telefonnummer CHAR(20) NOT NULL
+);
+CREATE INDEX IX_Leverantör_Namn ON Leverantör(Namn);
 
-CREATE PROCEDURE RegistreraProdukt(IN Namn VARCHAR(100), IN Provision FLOAT, IN Beskrivning VARCHAR(200))
+CREATE TABLE Produkt(
+Produktnummer INT AUTO_INCREMENT PRIMARY KEY,
+Namn VARCHAR(100) NOT NULL,
+Provision FLOAT NOT NULL,
+Beskrivning VARCHAR(200)
+);
+CREATE INDEX IX_Produkt_Namn ON Produkt(Namn);
 
-BEGIN
-	DECLARE ProduktFinnsRedan BOOL DEFAULT FALSE;
-    DECLARE CONTINUE HANDLER FOR 1062 SET ProduktFinnsRedan = TRUE;
-    
-    DECLARE EXIT HANDLER FOR 1048
-    BEGIN
-		ROLLBACK;
-	END;
-    
-    START TRANSACTION;
-		INSERT INTO Produkt(Namn,Provision,Beskrivning)
-			VALUES (Namn, Provision, Beskrivning);
-        
-        IF ProduktFinnsRedan THEN
-        UPDATE Produkt
-			SET Produkt.Namn = Namn,
-				Produkt.Provision = Provision,
-                Produkt.Beskrivning = Beskrivning;
-		END IF;
-        COMMIT;
-    
-END //
+CREATE TABLE ProduktLeverantör(
+LeverantörId INT,
+Produktnummer INT,
+PRIMARY KEY(LeverantörId, Produktnummer),
+FOREIGN KEY (LeverantörId) REFERENCES Leverantör(LeverantörId) ON DELETE CASCADE ON UPDATE CASCADE,
+FOREIGN KEY (Produktnummer) REFERENCES Produkt(Produktnummer) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
-DELIMITER ;
+CREATE TABLE Auktion(
+AuktionId INT AUTO_INCREMENT PRIMARY KEY,
+StartDatum DATE, -- fråga 2 ändrat -tagit bort NOT NULL
+SlutDatum DATE, -- fråga 2 ändrat -tagit bort NOT NULL
+UtgångsPris INT NOT NULL,
+AcceptPris INT NOT NULL
+);
 
-CALL RegistreraProdukt( 'Bokhylla', 0.10,  'En välvårdat bokhylla tillverkad');
-SELECT * FROM Produkt;
+CREATE TABLE AuktionsProdukt(
+AuktionId INT,
+Produktnummer INT,
+PRIMARY KEY(AuktionId, Produktnummer),
+FOREIGN KEY (AuktionId) REFERENCES Auktion(AuktionId) ON DELETE CASCADE ON UPDATE CASCADE,
+FOREIGN KEY (Produktnummer) REFERENCES Produkt(Produktnummer) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
--- Skapa en aukton utifrån en viss produkt där man kan sä5a utgångspris, acceptpris samt start och slutdatum för auk-onen. 
--- 2.
-DROP PROCEDURE IF EXISTS SkapaAuktion;
-DELIMITER //
+CREATE TABLE Kund(
+KundNummer INT AUTO_INCREMENT PRIMARY KEY,
+Förnamn VARCHAR(100) NOT NULL,
+Efternamn VARCHAR(100) NOT NULL,
+Gata VARCHAR(100) NOT NULL,
+Ort VARCHAR(50) NOT NULL,
+Epost VARCHAR(100) NOT NULL
+);
+CREATE INDEX IX_Kund_Efternamn ON kund(Efternamn);
 
-CREATE PROCEDURE SkapaAuktion(IN UtGångsPris INT, IN AcceptPris INT, IN StartDatum DATE, IN SlutDatum DATE, IN Produktnummer INT)
+CREATE TABLE Bud(
+AuktionId INT,
+KundNummer INT,
+BudDatum DATE,
+Tid TIME,
+Budsumma INT,
+PRIMARY KEY(AuktionId,KundNummer),
+FOREIGN KEY(AuktionId) REFERENCES Auktion(AuktionId) ON DELETE CASCADE ON UPDATE CASCADE,
+FOREIGN KEY(KundNummer) REFERENCES Kund(KundNummer) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
-BEGIN
-	
-	DECLARE EXIT HANDLER FOR 1048
-		BEGIN
-			ROLLBACK;
-		END;
-        
-	START TRANSACTION;
-    
+CREATE TABLE auktionshistorik(
+AuktionsHistorikID INT,
+Produktnummer INT,
+SlutPris INT,
+SlutDatum DATE,
+PRIMARY KEY(AuktionsHistorikID),
+FOREIGN KEY (Produktnummer) REFERENCES Produkt(Produktnummer) ON DELETE CASCADE ON UPDATE CASCADE
+); 
 
-        INSERT INTO `auktion` ( `StartDatum`, `SlutDatum`, `UtgångsPris`, `AcceptPris`)
-        VALUES ( '2017-02-01', '2017-02-23', '4000', '9000');
-        INSERT INTO `auktionsprodukt`
-        VALUES (LAST_INSERT_ID(), Produktnummer);
-        
-        
-        -- UPDATE Auktion
-		-- 	SET Auktion.StartDatum = StartDatum,
-			-- 	Auktion.SlutDatum = SlutDatum
-				-- 	WHERE Auktion.AuktionId = AuktionID;
-         
-	COMMIT;				
-END //
+CREATE TABLE AuktionerUtanKöpare(
+AuktionId INT,
+ProduktId INT,
+Acceptpris INT,
+SistaBud INT,
+SlutDatum DATE,
+PRIMARY KEY(AuktionId),
+FOREIGN KEY (ProduktId) REFERENCES Produkt(Produktnummer) ON DELETE CASCADE ON UPDATE CASCADE
+);
 
-DELIMITER ;
+CREATE TABLE user_account(
+	usr VARCHAR(50),
+	pwd VARCHAR(50)
+);
+INSERT INTO user_account(usr, pwd) VALUES("gunnar", "gunnar");
 
-CALL SkapaAuktion(13500, 22000, '2016-04-08', '2016-04-11' ,9);
-SELECT * FROM Produkt;
-SELECT * FROM Auktion;
-SELECT * FROM AuktionsProdukt;
+-- Leverantör
+INSERT INTO Leverantör(Namn, epost, telefonnummer) VALUES('AntikButiken', 'antik@hotmail.com', '08231192');
+INSERT INTO Leverantör(Namn, epost, telefonnummer) VALUES('AuktionsAffären', 'aa@mail.com', '08222444');
+INSERT INTO Leverantör(Namn, epost, telefonnummer) VALUES('ItBeasten', 'thebeast@mail.com', '0702929292');
+INSERT INTO Leverantör(Namn, epost, telefonnummer) VALUES('GammaltOchNytt', 'gon@mail.com', '080328928');
+INSERT INTO Leverantör(Namn, epost, telefonnummer) VALUES('MöbelJätten', 'jatten@hotmail.com', '0764266262');
+INSERT INTO Leverantör(Namn, epost, telefonnummer) VALUES('TavlorDeluxe', 'deluxe@mail.com', '0721616111');
 
+-- Produkter
+INSERT INTO Produkt(Namn, provision,  beskrivning) VALUE('OljeTavla', 0.05, 'Fin tavla från Italien');
+INSERT INTO Produkt(Namn, provision,  beskrivning) VALUE('Mahogny Bord', 0.07, 'Fint bord från Grekland');
+INSERT INTO Produkt(Namn, provision,  beskrivning) VALUE('Mahogny Stol', 0.04, 'Fin stol från 1600-talet');
+INSERT INTO Produkt(Namn, provision,  beskrivning) VALUE('Persiskt Matta', 0.10, 'Äkta persisk matta från 1800-talet');
+INSERT INTO Produkt(Namn, provision,  beskrivning) VALUE('Guld Ring', 0.02, 'Guld Ring från StormaktsTiden');
+INSERT INTO Produkt(Namn, provision,  beskrivning) VALUE('Gevär', 0.09, 'Gammalt gevär från 1700-talet');
+INSERT INTO Produkt(Namn, provision,  beskrivning) VALUE('Kinesisk Kruka', 0.05, 'Porslin från ming dynastin');
+INSERT INTO Produkt(Namn, provision,  beskrivning) VALUE('Antik Guld klocka', 0.05, 'Antik Guld klocka från Italien'); -- test fråga 7
+INSERT INTO Produkt(Namn, provision,  beskrivning) VALUE('Tand från mamut', 0.08, 'Gammal tand från en gigantisk mamut'); -- fråga 2
 
--- Lista pågående auktioner samt kunna se det högsta budet och vilken kund som lagt det. 
--- 3.
-SELECT Kund.Förnamn, Kund.Efternamn, MAX(Bud.Budsumma) AS Högsta_bud, Produkt.Namn, Auktion.StartDatum, Auktion.SlutDatum FROM Kund
-INNER JOIN Bud ON Kund.KundNummer = Bud.KundNummer
-INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
-INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
-INNER JOIN Produkt ON Auktionsprodukt.Produktnummer = Produkt.Produktnummer
-WHERE SlutDatum > current_date()
-GROUP BY Produkt.Namn;
+-- ProduktLeverantör
+INSERT INTO ProduktLeverantör (LeverantörId, ProduktNummer) VALUES(1,1);
+INSERT INTO ProduktLeverantör (LeverantörId, ProduktNummer) VALUES(2,2);
+INSERT INTO ProduktLeverantör (LeverantörId, ProduktNummer) VALUES(3,3);
+INSERT INTO ProduktLeverantör (LeverantörId, ProduktNummer) VALUES(4,4);
+INSERT INTO ProduktLeverantör (LeverantörId, ProduktNummer) VALUES(5,5);
+INSERT INTO ProduktLeverantör (LeverantörId, ProduktNummer) VALUES(6,6);
+INSERT INTO ProduktLeverantör (LeverantörId, ProduktNummer) VALUES(1,7);
+INSERT INTO ProduktLeverantör (LeverantörId, ProduktNummer) VALUES(2,8); -- fråga 7
+INSERT INTO ProduktLeverantör (LeverantörId, ProduktNummer) VALUES(4,9); -- fråga 2
 
+-- Auktion
+INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-23', 4000, 9000); -- 1 Ange bud på en produkt om ni vill
+INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-20', 17000, 19000); -- 2 Ange bud på en produkt om ni vill
+INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-22', 15000, 20000); -- 3 Ange bud på en produkt om ni vill
+INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-03', 20000, 30000); -- 4 uppdaterat
+INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-12', 30000, 50000); -- 5 test fråga 6 
+INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-12', 14000, 19000); -- 6 test fråga 6 
+INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-11', '2017-02-13', 25000, 40000); -- 7 
+INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-08', '2017-02-10', 30000, 50000); -- 8  testa fråga 7
+-- INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES(NULL, NULL); -- fråga 2
 
---  Se budhistoriken på en viss auktion, samt vilka kunder som lagt buden(Löste med View)
--- 4.
-DROP VIEW IF EXISTS KundBudHistorik;
+-- AuktionsProdukt
+INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(1,1);
+INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(2,2);
+INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(3,3);
+INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(4,4);
+INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(5,5);
+INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(6,6); -- Auktion nr7 lagts inte bud på någon produkt 
+INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(8,8);
 
-CREATE VIEW KundBudHistorik
-AS SELECT Förnamn, Efternamn, Budsumma, AcceptPris, Namn AS Produkt_Namn FROM Kund
-INNER JOIN Bud ON Kund.KundNummer = Bud.KundNummer
-INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
-INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
-INNER JOIN Produkt ON Auktionsprodukt.Produktnummer = Produkt.Produktnummer
-WHERE Auktion.AuktionId = '2'
-GROUP BY Kund.Förnamn;
+-- Kund
+INSERT INTO Kund (Förnamn, Efternamn, Gata, Ort, Epost) VALUES('Lisa', 'Strömberg', 'Körsbärsgatan 5', 'Stockholm', 'lisa@mail.com,');
+INSERT INTO Kund (Förnamn, Efternamn, Gata, Ort, Epost) VALUES('Arnold', 'Johansson', 'terminategatan 12', 'Göteborg', 'ilbeback@mail.com');
+INSERT INTO Kund (Förnamn, Efternamn, Gata, Ort, Epost) VALUES('Erik', 'Eriksson', 'kylgatan 25', 'Linköping', 'erikeriksson@mail.com');
+INSERT INTO Kund (Förnamn, Efternamn, Gata, Ort, Epost) VALUES('Gunde', 'Svan', 'FortBoyard 23', 'Stockholm', 'theshit@mail.com');
+INSERT INTO Kund (Förnamn, Efternamn, Gata, Ort, Epost) VALUES('Sven', 'Svensson', 'svennegatan 100', 'Göteborg', 'svensson@yahoo.com');
+INSERT INTO Kund (Förnamn, Efternamn, Gata, Ort, Epost) VALUES('Rolf', 'Nilsson', 'stigen 26', 'Linköping', 'nilssson@mail.co,');
+INSERT INTO Kund (Förnamn, Efternamn, Gata, Ort, Epost) VALUES('Anders', 'Larsson', 'hackestifen 1', 'Gotland', 'larsson@gmail.com');
 
--- 5
-
-DROP PROCEDURE IF EXISTS GetAvslutadeAuktioner;
-DELIMITER //
-CREATE PROCEDURE GetAvslutadeAuktioner(startdatum DATE, slutdatum DATE)
-BEGIN
-    SELECT Auktionshistorik.AuktionshistorikId, ROUND(Sum((Produkt.Provision* auktionshistorik.SlutPris))) AS Provision FROM Auktionshistorik
-        INNER JOIN Produkt ON Produkt.Produktnummer = Auktionshistorik.Produktnummer
-        WHERE Auktionshistorik.SlutDatum BETWEEN startdatum AND slutdatum
-        GROUP BY Auktionshistorik.AuktionshistorikId;
-END //
-DELIMITER ;
-
-CALL GetAvslutadeAuktioner('2016-01-03','2016-04-10');
-
--- 6.
-DROP EVENT IF EXISTS ArkiveraAuktionerUtanKöpare;
-SHOW EVENTS;
-SET GLOBAL event_scheduler = ON;
-DELIMITER //
-
-CREATE EVENT ArkiveraAuktionerUtanKöpare
-ON SCHEDULE EVERY 10 SECOND
-ON COMPLETION PRESERVE
-DO
-BEGIN
-	INSERT INTO AuktionerUtanKöpare(SELECT Auktion.AuktionId, Produkt.Produktnummer, auktion.AcceptPris,
-		MAX(bud.Budsumma) as SistaBud, Auktion.SlutDatum FROM Bud
-		INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
-		INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
-		INNER JOIN Produkt ON auktionsprodukt.Produktnummer = Produkt.Produktnummer
-        GROUP BY produkt.Produktnummer HAVING SistaBud < AcceptPris AND Auktion.SlutDatum < current_date());
-	DELETE FROM Auktion WHERE Auktion.AuktionId IN (SELECT AuktionerUtanKöpare.AuktionId FROM AuktionerUtanKöpare);
-END //
-DELIMITER ;
- 
--- DROP EVENT IF EXISTS ArkiveraAuktionerUtanKöpare;
-SELECT * FROM AuktionerUtanKöpare;
-SELECT * FROM Auktion;
-
-
--- 7.
-DROP EVENT IF EXISTS Auktion;
-SHOW EVENTS;
-SET GLOBAL event_scheduler = ON;
-DELIMITER //
-CREATE EVENT Auktion
-ON SCHEDULE EVERY 10 SECOND
-ON COMPLETION PRESERVE
-DO
-BEGIN
-    INSERT INTO auktionshistorik (SELECT Auktion.AuktionId, auktionsprodukt.Produktnummer, MAX(Bud.Budsumma), Auktion.SlutDatum FROM Kund
-        INNER JOIN Bud ON Kund.KundNummer = Bud.KundNummer
-        INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
-        INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
-        INNER JOIN Produkt ON auktionsprodukt.Produktnummer = Produkt.Produktnummer
-        WHERE Auktion.SlutDatum < current_date()
-        GROUP BY auktionsprodukt.Produktnummer);
-    DELETE FROM auktion WHERE auktion.AuktionId IN (SELECT auktionshistorik.AuktionsHistorikID FROM auktionshistorik);
-END //
-DELIMITER ;
--- DROP EVENT IF EXISTS ArkiveraAuktion;
-SELECT * FROM Auktionshistorik;
-SELECT * FROM Auktion;
-
-
--- 8.
-DROP VIEW IF EXISTS KundLista;
-CREATE VIEW KundLista AS
-SELECT CONCAT_WS(' ', Kund.Förnamn, Kund.Efternamn) AS Kund, AuktionsHistorik.SlutPris AS Total FROM Kund
-INNER JOIN AuktionsHistorik ON Kund.KundNummer = AuktionsHistorik.AuktionsHistorikID
-GROUP BY Kund, Total
-ORDER BY Total DESC;
-
-SELECT * FROM KundLista;
+-- Bud
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(1,2, '2016-01-03', '11:10', 9000); -- Lisa,OljeTavla
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(2,2, '2016-04-09', '15:00', 17400);
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(2,3, '2016-04-10', '16:30', 17550);
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(2,4, '2016-04-10', '16:50', 19550); -- Gunde,Mahogny Bord
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(3,3, '2016-07-12', '11:00', 16000);
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(3,7, '2016-07-12', '12:00', 20000); -- Anders,Mahogny Stol
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(4,4, '2017-02-03', '13:00', 22000); -- inte såld
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(5,5, '2017-02-07', '10:00', 31700);
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(5,2, '2017-02-01', '15:00', 33200); -- inte såld
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(6,6, '2017-02-01', '14:00', 14300);
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(6,4, '2017-02-05', '15:00', 15000); -- inte såld
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(4,7, '2017-02-03', '13:30', 23400);
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(4,1, '2017-02-03', '13:40', 30000); -- såld acceptpris= budsumma
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(8,1, '2017-02-09', '13:40', 35000); -- 
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(8,2, '2017-02-09', '15:00', 51000); -- testa fråga 7
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(8,3, '2017-02-09', '15:10', 52000); -- testa fråga 7
 
 
---  Vad den totala provisionen är per månad.
--- 9.
-DROP VIEW IF EXISTS totalprovision;
-
-CREATE VIEW TotalProvision AS
-SELECT MONTHNAME(AuktionsHistorik.SlutDatum) AS Månad, ROUND(SUM(Produkt.Provision * auktionshistorik.SlutPris))
-AS TotalProvision_PerMånad FROM AuktionsHistorik
-INNER JOIN produkt ON AuktionsHistorik.Produktnummer = produkt.Produktnummer
-GROUP BY MONTHNAME(AuktionsHistorik.SlutDatum)
-ORDER BY Månad DESC;
-
-SELECT * FROM TotalProvision
+-- auktionshistorik
+INSERT INTO Auktionshistorik(AuktionsHistorikId,Produktnummer,SlutPris,SlutDatum) VALUES(1,1,9000,'2016-01-03');
+INSERT INTO Auktionshistorik(AuktionsHistorikId,Produktnummer,SlutPris,SlutDatum) VALUES(2,2,19550,'2016-04-10');
+INSERT INTO Auktionshistorik(AuktionsHistorikId,Produktnummer,SlutPris,SlutDatum) VALUES(3,3,20000,'2016-07-12');
