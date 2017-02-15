@@ -1,63 +1,147 @@
-import java.util.ArrayList;
+import java.sql.*;
 import java.util.Scanner;
 
 public class Main {
-    private static ConnectionHandler connectionHandler = null;
-    private static Scanner scanner = new Scanner(System.in);
-    private static ArrayList<Kund> customerList = new ArrayList();
-    private static ArrayList<Auktion> auctionList = new ArrayList();
-    private static ArrayList<Leverantor> supplierList = new ArrayList();
+    private static boolean loggedIn = true;
+    private static Scanner scan = new Scanner(System.in);
 
-    public void printMenu(){
-        System.out.println("1.\tList customers");
-        System.out.println("2.\tList suppliers");
-        System.out.println("3.\tExit");
+    private static Connection conn = null;
+    private static Statement stm = null;
+    private static PreparedStatement pstm = null;
+    private static CallableStatement cstm = null;
+    private static ResultSet rs = null;
+
+    private static CustomerHandler customerHandler = null;
+    private static SupplierHandler supplierHandler = null;
+    private static AuctionHandler auctionHandler = null;
+    private static LoginHandler loginHandler = null;
+
+    private static void openConnection() {
+        String URL = "jdbc:mysql://localhost:3306/Auktion?useSSL=false";
+        try {
+            conn = DriverManager.getConnection(URL, "root", "gr3ddsemla");
+        } catch (Exception e){
+            // Do nothing
+        }
     }
 
-    public void init() throws Exception{
-        connectionHandler = new ConnectionHandler();
-        connectionHandler.startConnection();
-        customerList = connectionHandler.getCustomers();
-        supplierList = connectionHandler.getSupplierList();
+    private static void closeConnection(){
+        try {
+            if (rs != null) {
+                rs.close();
+            }
+            if (cstm != null) {
+                cstm.close();
+            }
+            if (pstm != null) {
+                pstm.close();
+            }
+            if (stm != null) {
+                stm.close();
+            }
+            if (conn != null) {
+                conn.close();
+            }
+        } catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
-    public static void main(String[] args) throws Exception{
-        Main main = new Main();
-        main.init();
+    private static void printReports(){
+        System.out.println("- Reports");
+        System.out.println("1. View auctions within a date interval");
+        System.out.println("2. View customers and their total order value");
+        System.out.println("3. View total provision per month");
+    }
 
-        int choice = 0;
-        boolean go = true;
-        main.printMenu();
+    private static void printMenu(){
+        System.out.println("1. Add a supplier");
+        System.out.println("2. Add a customer");
+        System.out.println("3. Add an auction from a supplier");
+        System.out.println("4. List active auctions and view bidding history");
+        System.out.println("5. Create reports");
+        System.out.println("0. Exit");
+    }
 
-        while (go) {
-            System.out.print("Menu choice: ");System.out.flush();
-            choice = scanner.nextInt();
+    private static void login(){
+        loggedIn = loginHandler.login();
+        if (loggedIn){
+            System.out.println("Login successful!");
+        } else {
+            System.out.println("Incorrect username or password.");
+        }
+    }
 
-            switch (choice){
-                case 1:
-                    for (Kund k : customerList) {
-                        System.out.println(k.toString());
-                    }
-                    break;
+    private static void setupHandlers(){
+        loginHandler = new LoginHandler(conn);
+        customerHandler = new CustomerHandler(conn);
+        supplierHandler = new SupplierHandler(conn);
+        auctionHandler = new AuctionHandler(conn);
+    }
 
-                case 2:
-                    for (Leverantor l : supplierList) {
-                        System.out.println(l.toString());
-                    }
-                    break;
-                case 3:
-                    System.out.println("Exiting program");
-                    go = false;
-                    break;
-                default:
-                    System.out.println("Incorrect menu choice.");
+    private static void closeAllHandlers(){
+        loginHandler.closeAll();
+        customerHandler.closeAll();
+        supplierHandler.closeAll();
+        auctionHandler.closeAll();
+    }
 
+    public static void main(String[] args){
+        openConnection();
+        setupHandlers();
+        login();
+        int menuChoice;
+
+        if(loggedIn){
+            while(true){
+
+                printMenu();
+                System.out.print(">> ");System.out.flush();
+                menuChoice = scan.nextInt();
+
+                switch (menuChoice) {
+                    case 1:
+                        // Add a supplier
+                        supplierHandler.addSupplier();
+                        break;
+                    case 2:
+                        // Add a customer
+                        customerHandler.addCustomer();
+                        break;
+                    case 3:
+                        // Add an auction from a supplier
+                        auctionHandler.addAuctionFromSupplier();
+                        break;
+                    case 4:
+                        // List active auctions and view bidding history
+                        auctionHandler.listActiveAuctionsAndHistory();
+                        break;
+                    case 5:
+                        printReports();
+                        System.out.print("Which report do you want to create?: ");
+                        int report = scan.nextInt();
+                        switch (report){
+                            case 1:
+                                auctionHandler.listClosedAuctions();
+                                break;
+                            case 2:
+                                customerHandler.listCustomersAndOrderValue();
+                                break;
+                            case 3:
+                                auctionHandler.listTotalProvision();
+                                break;
+                        }
+                        break;
+                    case 0:
+                        closeAllHandlers();
+                        closeConnection();
+                        System.out.println("Goodbye!");
+                        System.exit(0);
+                        break;
+                    default:
+                        System.out.println("Illegal input");
+                }
             }
         }
-
-
-
-
-        connectionHandler.closeConnection();
     }
 }

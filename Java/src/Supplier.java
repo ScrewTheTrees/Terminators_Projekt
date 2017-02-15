@@ -1,23 +1,25 @@
 /**
- * Created by Robin on 10/02/2017.
+ * Created by Robin on 15/02/2017.
  */
-public class Leverantor {
-    private int id;
-    private String namn, epost, telefonnummer;
+public class Supplier {
+    private int supplierId;
+    private String namn;
+    private String epost;
+    private String telefonnummer;
 
-    public Leverantor(int id, String namn, String epost, String telefonnummer) {
-        this.id = id;
+    public Supplier(int supplierId, String namn, String epost, String telefonnummer) {
+        this.supplierId = supplierId;
         this.namn = namn;
         this.epost = epost;
         this.telefonnummer = telefonnummer;
     }
 
-    public int getId() {
-        return id;
+    public int getSupplierId() {
+        return supplierId;
     }
 
-    public void setId(int id) {
-        this.id = id;
+    public void setSupplierId(int supplierId) {
+        this.supplierId = supplierId;
     }
 
     public String getNamn() {
@@ -46,11 +48,6 @@ public class Leverantor {
 
     @Override
     public String toString() {
-        return "Leverantor{" +
-                "id=" + id +
-                ", namn='" + namn + '\'' +
-                ", epost='" + epost + '\'' +
-                ", telefonnummer='" + telefonnummer + '\'' +
-                '}';
+        return supplierId + ". " + namn;
     }
 }

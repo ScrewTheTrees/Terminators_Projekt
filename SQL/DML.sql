@@ -180,7 +180,6 @@ FOR EACH ROW
 END //
 DELIMITER ;
 
-INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(7,3, '2017-02-09', '15:10', 52000); -- testa fråga 7
 
 -- DROP EVENT IF EXISTS ArkiveraAuktion;
 SELECT * FROM Auktionshistorik;

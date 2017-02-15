@@ -1,12 +1,16 @@
 /**
- * Created by Robin on 10/02/2017.
+ * Created by Robin on 15/02/2017.
  */
-public class Kund {
-    private int kundnummer;
-    private String fornamn, efternamn, gata, ort, epost;
+public class Customer {
+    private int kNR;
+    private String fornamn;
+    private String efternamn;
+    private String gata;
+    private String ort;
+    private String epost;
 
-    public Kund(int kundnummer, String fornamn, String efternamn, String gata, String ort, String epost) {
-        this.kundnummer = kundnummer;
+    public Customer(int kNR, String fornamn, String efternamn, String gata, String ort, String epost) {
+        this.kNR = kNR;
         this.fornamn = fornamn;
         this.efternamn = efternamn;
         this.gata = gata;
@@ -14,13 +18,12 @@ public class Kund {
         this.epost = epost;
     }
 
-    public int getKundnummer() {
-
-        return kundnummer;
+    public int getkNR() {
+        return kNR;
     }
 
-    public void setKundnummer(int kundnummer) {
-        this.kundnummer = kundnummer;
+    public void setkNR(int kNR) {
+        this.kNR = kNR;
     }
 
     public String getFornamn() {
@@ -63,15 +66,4 @@ public class Kund {
         this.epost = epost;
     }
 
-    @Override
-    public String toString() {
-        return "Kund{" +
-                "kundnummer=" + kundnummer +
-                ", fornamn='" + fornamn + '\'' +
-                ", efternamn='" + efternamn + '\'' +
-                ", gata='" + gata + '\'' +
-                ", ort='" + ort + '\'' +
-                ", epost='" + epost + '\'' +
-                '}';
-    }
 }
