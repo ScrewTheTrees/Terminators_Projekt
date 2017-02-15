@@ -154,14 +154,39 @@ BEGIN
         INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
         INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
         INNER JOIN Produkt ON auktionsprodukt.Produktnummer = Produkt.Produktnummer
-        WHERE Auktion.SlutDatum < current_date()
+        WHERE Bud.Budsumma >= Auktion.Utgångspris AND Auktion.SlutDatum < current_date()
         GROUP BY auktionsprodukt.Produktnummer);
     DELETE FROM auktion WHERE auktion.AuktionId IN (SELECT auktionshistorik.AuktionsHistorikID FROM auktionshistorik);
 END //
 DELIMITER ;
+
+DROP TRIGGER IF EXISTS onAuktionAcceptPris;
+DELIMITER //
+CREATE TRIGGER Auktion.onAuktionAcceptPris AFTER INSERT ON auktion.bud
+FOR EACH ROW
+	BEGIN
+		IF (NEW.Budsumma >= (SELECT AcceptPris FROM auktion WHERE auktion.AuktionId = NEW.AuktionId)) THEN
+			
+			INSERT INTO auktionshistorik (SELECT Auktion.AuktionId, auktionsprodukt.Produktnummer, MAX(Bud.Budsumma), Auktion.SlutDatum FROM Kund
+				INNER JOIN Bud ON Kund.KundNummer = Bud.KundNummer
+				INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
+				INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
+				INNER JOIN Produkt ON auktionsprodukt.Produktnummer = Produkt.Produktnummer
+				WHERE auktion.AuktionId = NEW.AuktionId
+				GROUP BY auktionsprodukt.Produktnummer);
+			DELETE FROM auktion WHERE auktion.AuktionId IN (SELECT auktionshistorik.AuktionsHistorikID FROM auktionshistorik);
+            
+		END IF;
+END //
+DELIMITER ;
+
+INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(7,3, '2017-02-09', '15:10', 52000); -- testa fråga 7
+
 -- DROP EVENT IF EXISTS ArkiveraAuktion;
 SELECT * FROM Auktionshistorik;
 SELECT * FROM Auktion;
+
+
 
 
 -- 8.
