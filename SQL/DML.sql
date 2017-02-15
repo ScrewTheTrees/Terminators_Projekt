@@ -81,6 +81,7 @@ SlutDatum DATE,
 PRIMARY KEY(AuktionId),
 FOREIGN KEY (ProduktId) REFERENCES Produkt(Produktnummer) ON DELETE CASCADE ON UPDATE CASCADE
 );
+
 -- Leverantör
 INSERT INTO Leverantör(Namn, epost, telefonnummer) VALUES('AntikButiken', 'antik@hotmail.com', '08231192');
 INSERT INTO Leverantör(Namn, epost, telefonnummer) VALUES('AuktionsAffären', 'aa@mail.com', '08222444');
