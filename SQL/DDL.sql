@@ -122,11 +122,11 @@ INSERT INTO ProduktLeverantör (LeverantörId, ProduktNummer) VALUES(4,9); -- fr
 INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-23', 4000, 9000); -- 1 Ange bud på en produkt om ni vill
 INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-20', 17000, 19000); -- 2 Ange bud på en produkt om ni vill
 INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-22', 15000, 20000); -- 3 Ange bud på en produkt om ni vill
-INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-03', 20000, 30000); -- 4 uppdaterat
-INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-12', 30000, 50000); -- 5 test fråga 6 
-INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-12', 14000, 19000); -- 6 test fråga 6 
-INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-11', '2017-02-13', 25000, 40000); -- 7 
-INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-08', '2017-02-10', 30000, 50000); -- 8  testa fråga 7
+INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-20', 20000, 30000); -- 4 uppdaterat
+INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-20', 30000, 50000); -- 5 test fråga 6 
+INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-22', 14000, 19000); -- 6 test fråga 6 
+INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-11', '2017-02-23', 25000, 40000); -- 7 
+INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-08', '2017-02-20', 30000, 50000); -- 8  testa fråga 7
 -- INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES(NULL, NULL); -- fråga 2
 
 -- AuktionsProdukt
