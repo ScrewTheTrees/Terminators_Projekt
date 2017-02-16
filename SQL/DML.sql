@@ -27,21 +27,18 @@ BEGIN
                 Produkt.Beskrivning = Beskrivning;
 		END IF;
         COMMIT;
-    
 END //
-
 DELIMITER ;
 
 CALL RegistreraProdukt( 'Bokhylla', 0.10,  'En välvårdat bokhylla tillverkad');
 SELECT * FROM Produkt;
 
--- Skapa en aukton utifrån en viss produkt där man kan sä5a utgångspris, acceptpris samt start och slutdatum för auk-onen. 
+-- Skapa en aukton utifrån en viss produkt där man kan sätta utgångspris, acceptpris samt start och slutdatum för auktionen. 
 -- 2.
 DROP PROCEDURE IF EXISTS SkapaAuktion;
+
 DELIMITER //
-
 CREATE PROCEDURE SkapaAuktion(IN UtGångsPris INT, IN AcceptPris INT, IN StartDatum DATE, IN SlutDatum DATE, IN Produktnummer INT)
-
 BEGIN
 	
 	DECLARE EXIT HANDLER FOR 1048
@@ -50,37 +47,28 @@ BEGIN
 		END;
         
 	START TRANSACTION;
-    
 
-        INSERT INTO `auktion` ( `StartDatum`, `SlutDatum`, `UtgångsPris`, `AcceptPris`)
-        VALUES ( '2017-02-01', '2017-02-23', '4000', '9000');
-        INSERT INTO `auktionsprodukt`
-        VALUES (LAST_INSERT_ID(), Produktnummer);
+        INSERT INTO `auktion` ( `StartDatum`, `Produktnummer`, `SlutDatum`, `UtgångsPris`, `AcceptPris`)
+        VALUES ( '2017-02-01', 9,'2017-02-23', '4000', '9000');
+      /*  INSERT INTO `auktionsprodukt`
+        VALUES (LAST_INSERT_ID(), Produktnummer);*/
         
-        
-        -- UPDATE Auktion
-		-- 	SET Auktion.StartDatum = StartDatum,
-			-- 	Auktion.SlutDatum = SlutDatum
-				-- 	WHERE Auktion.AuktionId = AuktionID;
-         
 	COMMIT;				
 END //
-
 DELIMITER ;
 
-CALL SkapaAuktion(13500, 22000, '2016-04-08', '2016-04-11' ,9);
+CALL SkapaAuktion(13500, 22000, '2016-04-08', '2016-04-11',9);
 SELECT * FROM Produkt;
 SELECT * FROM Auktion;
-SELECT * FROM AuktionsProdukt;
-
+-- SELECT * FROM AuktionsProdukt;
 
 -- Lista pågående auktioner samt kunna se det högsta budet och vilken kund som lagt det. 
 -- 3.
 SELECT Kund.Förnamn, Kund.Efternamn, MAX(Bud.Budsumma) AS Högsta_bud, Produkt.Namn, Auktion.StartDatum, Auktion.SlutDatum FROM Kund
 INNER JOIN Bud ON Kund.KundNummer = Bud.KundNummer
 INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
-INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
-INNER JOIN Produkt ON Auktionsprodukt.Produktnummer = Produkt.Produktnummer
+-- INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
+INNER JOIN Produkt ON Auktion.Produktnummer = Produkt.Produktnummer
 WHERE SlutDatum > current_date()
 GROUP BY Produkt.Namn;
 
@@ -93,10 +81,12 @@ CREATE VIEW KundBudHistorik
 AS SELECT Förnamn, Efternamn, Budsumma, AcceptPris, Namn AS Produkt_Namn FROM Kund
 INNER JOIN Bud ON Kund.KundNummer = Bud.KundNummer
 INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
-INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
-INNER JOIN Produkt ON Auktionsprodukt.Produktnummer = Produkt.Produktnummer
+-- INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
+INNER JOIN Produkt ON Auktion.Produktnummer = Produkt.Produktnummer
 WHERE Auktion.AuktionId = '2'
 GROUP BY Kund.Förnamn;
+
+SELECT * FROM KundBudHistorik;
 
 -- 5
 
@@ -113,12 +103,14 @@ DELIMITER ;
 
 CALL GetAvslutadeAuktioner('2016-01-03','2016-04-10');
 
--- 6.
+-- 6. Auktioner utan köpare
+
 DROP EVENT IF EXISTS ArkiveraAuktionerUtanKöpare;
 SHOW EVENTS;
 SET GLOBAL event_scheduler = ON;
-DELIMITER //
 
+
+DELIMITER //
 CREATE EVENT ArkiveraAuktionerUtanKöpare
 ON SCHEDULE EVERY 10 SECOND
 ON COMPLETION PRESERVE
@@ -127,14 +119,14 @@ BEGIN
 	INSERT INTO AuktionerUtanKöpare(SELECT Auktion.AuktionId, Produkt.Produktnummer, auktion.AcceptPris,
 		MAX(bud.Budsumma) as SistaBud, Auktion.SlutDatum FROM Bud
 		INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
-		INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
-		INNER JOIN Produkt ON auktionsprodukt.Produktnummer = Produkt.Produktnummer
-        GROUP BY produkt.Produktnummer HAVING SistaBud < AcceptPris AND Auktion.SlutDatum < current_date());
+	    -- INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
+		INNER JOIN Produkt ON Auktion.Produktnummer = Produkt.Produktnummer
+        GROUP BY Produkt.Produktnummer HAVING SistaBud < AcceptPris AND Auktion.SlutDatum < current_date());
 	DELETE FROM Auktion WHERE Auktion.AuktionId IN (SELECT AuktionerUtanKöpare.AuktionId FROM AuktionerUtanKöpare);
 END //
 DELIMITER ;
  
--- DROP EVENT IF EXISTS ArkiveraAuktionerUtanKöpare;
+DROP EVENT IF EXISTS ArkiveraAuktionerUtanKöpare;
 SELECT * FROM AuktionerUtanKöpare;
 SELECT * FROM Auktion;
 
@@ -149,13 +141,13 @@ ON SCHEDULE EVERY 10 SECOND
 ON COMPLETION PRESERVE
 DO
 BEGIN
-    INSERT INTO auktionshistorik (SELECT Auktion.AuktionId, auktionsprodukt.Produktnummer, MAX(Bud.Budsumma), Auktion.SlutDatum FROM Kund
+    INSERT INTO auktionshistorik (SELECT Auktion.AuktionId, Auktion.Produktnummer, MAX(Bud.Budsumma), Auktion.SlutDatum FROM Kund
         INNER JOIN Bud ON Kund.KundNummer = Bud.KundNummer
         INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
-        INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
-        INNER JOIN Produkt ON auktionsprodukt.Produktnummer = Produkt.Produktnummer
+        -- INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
+        INNER JOIN Produkt ON Auktion.Produktnummer = Produkt.Produktnummer
         WHERE Bud.Budsumma >= Auktion.Utgångspris AND Auktion.SlutDatum < current_date()
-        GROUP BY auktionsprodukt.Produktnummer);
+        GROUP BY Auktion.Produktnummer);
     DELETE FROM auktion WHERE auktion.AuktionId IN (SELECT auktionshistorik.AuktionsHistorikID FROM auktionshistorik);
 END //
 DELIMITER ;
@@ -175,7 +167,6 @@ FOR EACH ROW
 				WHERE auktion.AuktionId = NEW.AuktionId
 				GROUP BY auktionsprodukt.Produktnummer);
 			DELETE FROM auktion WHERE auktion.AuktionId IN (SELECT auktionshistorik.AuktionsHistorikID FROM auktionshistorik);
-            
 		END IF;
 END //
 DELIMITER ;

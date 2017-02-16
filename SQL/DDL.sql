@@ -28,19 +28,22 @@ FOREIGN KEY (Produktnummer) REFERENCES Produkt(Produktnummer) ON DELETE CASCADE 
 
 CREATE TABLE Auktion(
 AuktionId INT AUTO_INCREMENT PRIMARY KEY,
+Produktnummer INT,
 StartDatum DATE, -- fråga 2 ändrat -tagit bort NOT NULL
 SlutDatum DATE, -- fråga 2 ändrat -tagit bort NOT NULL
 UtgångsPris INT NOT NULL,
-AcceptPris INT NOT NULL
-);
+AcceptPris INT NOT NULL,
+FOREIGN KEY (Produktnummer) REFERENCES Produkt(Produktnummer) ON DELETE CASCADE ON UPDATE CASCADE
 
+);
+/*
 CREATE TABLE AuktionsProdukt(
 AuktionId INT,
 Produktnummer INT,
 PRIMARY KEY(AuktionId, Produktnummer),
 FOREIGN KEY (AuktionId) REFERENCES Auktion(AuktionId) ON DELETE CASCADE ON UPDATE CASCADE,
 FOREIGN KEY (Produktnummer) REFERENCES Produkt(Produktnummer) ON DELETE CASCADE ON UPDATE CASCADE
-);
+);*/
 
 CREATE TABLE Kund(
 KundNummer INT AUTO_INCREMENT PRIMARY KEY,
@@ -119,16 +122,16 @@ INSERT INTO ProduktLeverantör (LeverantörId, ProduktNummer) VALUES(2,8); -- fr
 INSERT INTO ProduktLeverantör (LeverantörId, ProduktNummer) VALUES(4,9); -- fråga 2
 
 -- Auktion
-INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-23', 4000, 9000); -- 1 Ange bud på en produkt om ni vill
-INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-20', 17000, 19000); -- 2 Ange bud på en produkt om ni vill
-INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-22', 15000, 20000); -- 3 Ange bud på en produkt om ni vill
-INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-20', 20000, 30000); -- 4 uppdaterat
-INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-20', 30000, 50000); -- 5 test fråga 6 
-INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', '2017-02-22', 14000, 19000); -- 6 test fråga 6 
-INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-11', '2017-02-23', 25000, 40000); -- 7 
-INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-08', '2017-02-20', 30000, 50000); -- 8  testa fråga 7
+INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01',1 ,'2017-02-17', 4000, 9000); -- 1 Ange bud på en produkt om ni vill
+INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01',2 ,'2017-02-20', 17000, 19000); -- 2 Ange bud på en produkt om ni vill
+INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01',3 ,'2017-02-22', 15000, 20000); -- 3 Ange bud på en produkt om ni vill
+INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01',4 ,'2017-02-20', 20000, 30000); -- 4 uppdaterat
+INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01',5 ,'2017-02-15', 30000, 50000); -- 5 test fråga 6 
+INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', 6,'2017-02-14', 14000, 19000); -- 6 test fråga 6 
+INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-11',7 ,'2017-02-23', 25000, 40000); -- 7 
+INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-08', 8,'2017-02-20', 30000, 50000); -- 8  testa fråga 7
 -- INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES(NULL, NULL); -- fråga 2
-
+/*
 -- AuktionsProdukt
 INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(1,1);
 INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(2,2);
@@ -137,7 +140,7 @@ INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(4,4);
 INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(5,5);
 INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(6,6); -- Auktion nr7 lagts inte bud på någon produkt 
 INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(8,8);
-
+*/
 -- Kund
 INSERT INTO Kund (Förnamn, Efternamn, Gata, Ort, Epost) VALUES('Lisa', 'Strömberg', 'Körsbärsgatan 5', 'Stockholm', 'lisa@mail.com,');
 INSERT INTO Kund (Förnamn, Efternamn, Gata, Ort, Epost) VALUES('Arnold', 'Johansson', 'terminategatan 12', 'Göteborg', 'ilbeback@mail.com');
