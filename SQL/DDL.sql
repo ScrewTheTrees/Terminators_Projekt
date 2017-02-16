@@ -153,6 +153,6 @@ INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(8,3, '20
 
 
 -- auktionshistorik
--- INSERT INTO Auktionshistorik(AuktionsHistorikId,Produktnummer,SlutPris,SlutDatum) VALUES(1,1,9000,'2016-01-03');
--- INSERT INTO Auktionshistorik(AuktionsHistorikId,Produktnummer,SlutPris,SlutDatum) VALUES(2,2,19550,'2016-04-10');
--- INSERT INTO Auktionshistorik(AuktionsHistorikId,Produktnummer,SlutPris,SlutDatum) VALUES(3,3,20000,'2016-07-12');
+ INSERT INTO Auktionshistorik(AuktionsHistorikId,Produktnummer,SlutPris,SlutDatum) VALUES(-1,1,9000,'2016-01-03');
+ INSERT INTO Auktionshistorik(AuktionsHistorikId,Produktnummer,SlutPris,SlutDatum) VALUES(-2,2,19550,'2016-04-10');
+ INSERT INTO Auktionshistorik(AuktionsHistorikId,Produktnummer,SlutPris,SlutDatum) VALUES(-3,3,20000,'2016-07-12');

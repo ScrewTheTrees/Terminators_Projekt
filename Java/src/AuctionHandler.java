@@ -32,8 +32,7 @@ public class AuctionHandler {
             rs = stm.executeQuery("SELECT Auktion.AuktionId, Produkt.Namn, Auktion.StartDatum, Auktion.SlutDatum FROM Kund\n" +
                     "INNER JOIN Bud ON Kund.KundNummer = Bud.KundNummer\n" +
                     "INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId\n" +
-                    "INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId\n" +
-                    "INNER JOIN Produkt ON Auktionsprodukt.Produktnummer = Produkt.Produktnummer\n" +
+                    "INNER JOIN Produkt ON auktion.Produktnummer = Produkt.Produktnummer\n" +
                     "WHERE SlutDatum > current_date()\n" +
                     "GROUP BY Produkt.Namn;");
             System.out.println("Current auctions and bidding history:");
@@ -43,8 +42,7 @@ public class AuctionHandler {
                 pstm = connection.prepareStatement("SELECT Förnamn, Efternamn, Budsumma, AcceptPris, Namn AS Produkt_Namn FROM Kund\n" +
                         "INNER JOIN Bud ON Kund.KundNummer = Bud.KundNummer\n" +
                         "INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId\n" +
-                        "INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId\n" +
-                        "INNER JOIN Produkt ON Auktionsprodukt.Produktnummer = Produkt.Produktnummer\n" +
+                        "INNER JOIN Produkt ON auktion.Produktnummer = Produkt.Produktnummer\n" +
                         "WHERE Auktion.AuktionId = ?\n" +
                         "GROUP BY Kund.Förnamn\n" +
                         "ORDER BY Budsumma ASC");
@@ -64,9 +62,9 @@ public class AuctionHandler {
     }
 
     public void listClosedAuctions(){
-        System.out.print("Start date(yyyy-mm-dd): ");System.out.flush();
+        System.out.print("Start date: ");System.out.flush();
         String startdatum = scan.nextLine();
-        System.out.print("End date(yyyy-mm-dd): ");System.out.flush();
+        System.out.print("End date: ");System.out.flush();
         String slutdatum = scan.nextLine();
         try {
             cstm = connection.prepareCall("{CALL GetAvslutadeAuktioner(?, ?)}");
@@ -147,11 +145,11 @@ public class AuctionHandler {
         System.out.print("Accepting price: ");
         int acceptPrice = scan.nextInt();
 
-        System.out.print("Start date(yyyy-mm-dd): ");
+        System.out.print("Start date: ");
         Scanner scanner = new Scanner(System.in); // Var tvungen att lägga till denna scanner då denna rad hoppades över annars...
         String startdatum = scanner.nextLine();
 
-        System.out.print("End date(yyyy-mm-dd): ");
+        System.out.print("End date: ");
         String slutdatum = scanner.nextLine();
 
         try {
