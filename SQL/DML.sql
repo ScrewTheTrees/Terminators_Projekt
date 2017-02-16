@@ -50,8 +50,6 @@ BEGIN
 
         INSERT INTO `auktion` ( `StartDatum`, `Produktnummer`, `SlutDatum`, `UtgångsPris`, `AcceptPris`)
         VALUES ( StartDatum, ProduktNummer,SlutDatum, UtGångsPris, AcceptPris);
-      /*  INSERT INTO `auktionsprodukt`
-        VALUES (LAST_INSERT_ID(), Produktnummer);*/
         
 	COMMIT;				
 END //
@@ -67,7 +65,6 @@ SELECT * FROM Auktion;
 SELECT Kund.Förnamn, Kund.Efternamn, MAX(Bud.Budsumma) AS Högsta_bud, Produkt.Namn, Auktion.StartDatum, Auktion.SlutDatum FROM Kund
 INNER JOIN Bud ON Kund.KundNummer = Bud.KundNummer
 INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
--- INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
 INNER JOIN Produkt ON Auktion.Produktnummer = Produkt.Produktnummer
 WHERE SlutDatum > current_date()
 GROUP BY Produkt.Namn;
@@ -81,7 +78,6 @@ CREATE VIEW KundBudHistorik
 AS SELECT Förnamn, Efternamn, Budsumma, AcceptPris, Namn AS Produkt_Namn FROM Kund
 INNER JOIN Bud ON Kund.KundNummer = Bud.KundNummer
 INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
--- INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
 INNER JOIN Produkt ON Auktion.Produktnummer = Produkt.Produktnummer
 WHERE Auktion.AuktionId = '2'
 GROUP BY Kund.Förnamn;
@@ -172,8 +168,6 @@ DELIMITER ;
 -- DROP EVENT IF EXISTS ArkiveraAuktion;
 SELECT * FROM Auktionshistorik;
 SELECT * FROM Auktion;
-
-
 
 
 -- 8.
