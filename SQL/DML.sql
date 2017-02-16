@@ -49,7 +49,7 @@ BEGIN
 	START TRANSACTION;
 
         INSERT INTO `auktion` ( `StartDatum`, `Produktnummer`, `SlutDatum`, `UtgångsPris`, `AcceptPris`)
-        VALUES ( '2017-02-01', 9,'2017-02-23', '4000', '9000');
+        VALUES ( StartDatum, ProduktNummer,SlutDatum, UtGångsPris, AcceptPris);
       /*  INSERT INTO `auktionsprodukt`
         VALUES (LAST_INSERT_ID(), Produktnummer);*/
         
@@ -105,35 +105,32 @@ CALL GetAvslutadeAuktioner('2016-01-03','2016-04-10');
 
 -- 6. Auktioner utan köpare
 
-DROP EVENT IF EXISTS ArkiveraAuktionerUtanKöpare;
 SHOW EVENTS;
 SET GLOBAL event_scheduler = ON;
 
-
+DROP EVENT IF EXISTS ArkiveraAuktionerUtanKöpare;
 DELIMITER //
 CREATE EVENT ArkiveraAuktionerUtanKöpare
 ON SCHEDULE EVERY 10 SECOND
 ON COMPLETION PRESERVE
 DO
 BEGIN
-	INSERT INTO AuktionerUtanKöpare(SELECT Auktion.AuktionId, Produkt.Produktnummer, auktion.AcceptPris,
-		MAX(bud.Budsumma) as SistaBud, Auktion.SlutDatum FROM Bud
-		INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
-	    -- INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
-		INNER JOIN Produkt ON Auktion.Produktnummer = Produkt.Produktnummer
-        GROUP BY Produkt.Produktnummer HAVING SistaBud < AcceptPris AND Auktion.SlutDatum < current_date());
+	INSERT INTO AuktionerUtanKöpare(SELECT Auktion.AuktionId, Produkt.Produktnummer, auktion.AcceptPris, MAX(bud.Budsumma)
+	as SistaBud, Auktion.SlutDatum FROM Auktion
+		LEFT JOIN Bud ON Auktion.AuktionId = Bud.AuktionId
+		LEFT JOIN Produkt ON Auktion.Produktnummer = Produkt.Produktnummer
+        GROUP BY Auktion.AuktionID HAVING (SistaBud < AcceptPris OR SistaBud IS NULL) AND Auktion.SlutDatum < current_date());
 	DELETE FROM Auktion WHERE Auktion.AuktionId IN (SELECT AuktionerUtanKöpare.AuktionId FROM AuktionerUtanKöpare);
 END //
 DELIMITER ;
  
-DROP EVENT IF EXISTS ArkiveraAuktionerUtanKöpare;
+
 SELECT * FROM AuktionerUtanKöpare;
 SELECT * FROM Auktion;
 
 
 -- 7.
 DROP EVENT IF EXISTS Auktion;
-SHOW EVENTS;
 SET GLOBAL event_scheduler = ON;
 DELIMITER //
 CREATE EVENT Auktion
@@ -141,14 +138,13 @@ ON SCHEDULE EVERY 10 SECOND
 ON COMPLETION PRESERVE
 DO
 BEGIN
-    INSERT INTO auktionshistorik (SELECT Auktion.AuktionId, Auktion.Produktnummer, MAX(Bud.Budsumma), Auktion.SlutDatum FROM Kund
+    INSERT INTO auktionshistorik (SELECT Auktion.AuktionId, auktion.Produktnummer, MAX(Bud.Budsumma), Auktion.SlutDatum FROM Kund
         INNER JOIN Bud ON Kund.KundNummer = Bud.KundNummer
         INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
-        -- INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
-        INNER JOIN Produkt ON Auktion.Produktnummer = Produkt.Produktnummer
-        WHERE Bud.Budsumma >= Auktion.Utgångspris AND Auktion.SlutDatum < current_date()
-        GROUP BY Auktion.Produktnummer);
-    DELETE FROM auktion WHERE auktion.AuktionId IN (SELECT auktionshistorik.AuktionsHistorikID FROM auktionshistorik);
+        INNER JOIN Produkt ON auktion.Produktnummer = Produkt.Produktnummer
+        WHERE Bud.Budsumma >= Auktion.AcceptPris AND Auktion.SlutDatum < current_date()
+        GROUP BY auktion.Produktnummer);
+    DELETE FROM auktion WHERE Bud.Budsumma >= Auktion.Utgångspris AND Auktion.SlutDatum < current_date();
 END //
 DELIMITER ;
 
@@ -157,16 +153,17 @@ DELIMITER //
 CREATE TRIGGER Auktion.onAuktionAcceptPris AFTER INSERT ON auktion.bud
 FOR EACH ROW
 	BEGIN
-		IF (NEW.Budsumma >= (SELECT AcceptPris FROM auktion WHERE auktion.AuktionId = NEW.AuktionId)) THEN
+		IF (NEW.Budsumma >= (SELECT AcceptPris FROM auktion WHERE auktion.AuktionId = NEW.AuktionId)
+		AND (SELECT COUNT(1) FROM Bud WHERE AuktionID = NEW.AuktionID) = 1) THEN
 			
-			INSERT INTO auktionshistorik (SELECT Auktion.AuktionId, auktionsprodukt.Produktnummer, MAX(Bud.Budsumma), Auktion.SlutDatum FROM Kund
+			INSERT INTO auktionshistorik (SELECT Auktion.AuktionId, auktion.Produktnummer, MAX(Bud.Budsumma), Auktion.SlutDatum FROM Kund
 				INNER JOIN Bud ON Kund.KundNummer = Bud.KundNummer
 				INNER JOIN Auktion ON Bud.AuktionId = Auktion.AuktionId
-				INNER JOIN auktionsprodukt ON Auktion.AuktionId = auktionsprodukt.AuktionId
-				INNER JOIN Produkt ON auktionsprodukt.Produktnummer = Produkt.Produktnummer
+				INNER JOIN Produkt ON auktion.Produktnummer = Produkt.Produktnummer
 				WHERE auktion.AuktionId = NEW.AuktionId
-				GROUP BY auktionsprodukt.Produktnummer);
-			DELETE FROM auktion WHERE auktion.AuktionId IN (SELECT auktionshistorik.AuktionsHistorikID FROM auktionshistorik);
+				GROUP BY auktion.Produktnummer);
+			DELETE FROM auktion WHERE auktion.AuktionId = NEW.AuktionId;
+            
 		END IF;
 END //
 DELIMITER ;

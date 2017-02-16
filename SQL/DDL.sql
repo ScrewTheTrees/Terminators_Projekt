@@ -36,14 +36,6 @@ AcceptPris INT NOT NULL,
 FOREIGN KEY (Produktnummer) REFERENCES Produkt(Produktnummer) ON DELETE CASCADE ON UPDATE CASCADE
 
 );
-/*
-CREATE TABLE AuktionsProdukt(
-AuktionId INT,
-Produktnummer INT,
-PRIMARY KEY(AuktionId, Produktnummer),
-FOREIGN KEY (AuktionId) REFERENCES Auktion(AuktionId) ON DELETE CASCADE ON UPDATE CASCADE,
-FOREIGN KEY (Produktnummer) REFERENCES Produkt(Produktnummer) ON DELETE CASCADE ON UPDATE CASCADE
-);*/
 
 CREATE TABLE Kund(
 KundNummer INT AUTO_INCREMENT PRIMARY KEY,
@@ -56,12 +48,12 @@ Epost VARCHAR(100) NOT NULL
 CREATE INDEX IX_Kund_Efternamn ON kund(Efternamn);
 
 CREATE TABLE Bud(
+BudId INT AUTO_INCREMENT PRIMARY KEY,
 AuktionId INT,
 KundNummer INT,
 BudDatum DATE,
 Tid TIME,
 Budsumma INT,
-PRIMARY KEY(AuktionId,KundNummer),
 FOREIGN KEY(AuktionId) REFERENCES Auktion(AuktionId) ON DELETE CASCADE ON UPDATE CASCADE,
 FOREIGN KEY(KundNummer) REFERENCES Kund(KundNummer) ON DELETE CASCADE ON UPDATE CASCADE
 );
@@ -127,20 +119,11 @@ INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpri
 INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01',3 ,'2017-02-22', 15000, 20000); -- 3 Ange bud på en produkt om ni vill
 INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01',4 ,'2017-02-20', 20000, 30000); -- 4 uppdaterat
 INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01',5 ,'2017-02-15', 30000, 50000); -- 5 test fråga 6 
-INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01', 6,'2017-02-14', 14000, 19000); -- 6 test fråga 6 
+INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-01',6 ,'2017-02-14', 14000, 19000); -- 6 test fråga 6 
 INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-11',7 ,'2017-02-23', 25000, 40000); -- 7 
-INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-08', 8,'2017-02-20', 30000, 50000); -- 8  testa fråga 7
+INSERT INTO Auktion(StartDatum,Produktnummer, SlutDatum, utgångspris, acceptpris) VALUES('2017-02-08',8 ,'2017-02-20', 30000, 50000); -- 8  testa fråga 7
 -- INSERT INTO Auktion(StartDatum, SlutDatum, utgångspris, acceptpris) VALUES(NULL, NULL); -- fråga 2
-/*
--- AuktionsProdukt
-INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(1,1);
-INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(2,2);
-INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(3,3);
-INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(4,4);
-INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(5,5);
-INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(6,6); -- Auktion nr7 lagts inte bud på någon produkt 
-INSERT INTO AuktionsProdukt(AuktionId, ProduktNummer) VALUES(8,8);
-*/
+
 -- Kund
 INSERT INTO Kund (Förnamn, Efternamn, Gata, Ort, Epost) VALUES('Lisa', 'Strömberg', 'Körsbärsgatan 5', 'Stockholm', 'lisa@mail.com,');
 INSERT INTO Kund (Förnamn, Efternamn, Gata, Ort, Epost) VALUES('Arnold', 'Johansson', 'terminategatan 12', 'Göteborg', 'ilbeback@mail.com');
@@ -170,6 +153,6 @@ INSERT INTO Bud (AuktionId, KundNummer, BudDatum, Tid, Budsumma) VALUES(8,3, '20
 
 
 -- auktionshistorik
-INSERT INTO Auktionshistorik(AuktionsHistorikId,Produktnummer,SlutPris,SlutDatum) VALUES(1,1,9000,'2016-01-03');
-INSERT INTO Auktionshistorik(AuktionsHistorikId,Produktnummer,SlutPris,SlutDatum) VALUES(2,2,19550,'2016-04-10');
-INSERT INTO Auktionshistorik(AuktionsHistorikId,Produktnummer,SlutPris,SlutDatum) VALUES(3,3,20000,'2016-07-12');
+-- INSERT INTO Auktionshistorik(AuktionsHistorikId,Produktnummer,SlutPris,SlutDatum) VALUES(1,1,9000,'2016-01-03');
+-- INSERT INTO Auktionshistorik(AuktionsHistorikId,Produktnummer,SlutPris,SlutDatum) VALUES(2,2,19550,'2016-04-10');
+-- INSERT INTO Auktionshistorik(AuktionsHistorikId,Produktnummer,SlutPris,SlutDatum) VALUES(3,3,20000,'2016-07-12');
