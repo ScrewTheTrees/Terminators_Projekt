@@ -64,9 +64,9 @@ public class AuctionHandler {
     }
 
     public void listClosedAuctions(){
-        System.out.print("Start date: ");System.out.flush();
+        System.out.print("Start date(yyyy-mm-dd): ");System.out.flush();
         String startdatum = scan.nextLine();
-        System.out.print("End date: ");System.out.flush();
+        System.out.print("End date(yyyy-mm-dd): ");System.out.flush();
         String slutdatum = scan.nextLine();
         try {
             cstm = connection.prepareCall("{CALL GetAvslutadeAuktioner(?, ?)}");
@@ -147,11 +147,11 @@ public class AuctionHandler {
         System.out.print("Accepting price: ");
         int acceptPrice = scan.nextInt();
 
-        System.out.print("Start date: ");
+        System.out.print("Start date(yyyy-mm-dd): ");
         Scanner scanner = new Scanner(System.in); // Var tvungen att lägga till denna scanner då denna rad hoppades över annars...
         String startdatum = scanner.nextLine();
 
-        System.out.print("End date: ");
+        System.out.print("End date(yyyy-mm-dd): ");
         String slutdatum = scanner.nextLine();
 
         try {
